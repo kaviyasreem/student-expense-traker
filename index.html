@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Expense Tracker</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f5fa;
+    color: #222;
+}
+
+header {
+    background: #253b80;
+    color: white;
+    text-align: center;
+    padding: 25px;
+}
+
+.container {
+    max-width: 950px;
+    margin: 30px auto;
+    padding: 15px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #00000012;
+}
+
+.card h3 {
+    color: #666;
+    font-size: 15px;
+}
+
+.card p {
+    font-size: 25px;
+    font-weight: bold;
+    color: #253b80;
+}
+
+.form-box, .history {
+    background: white;
+    padding: 22px;
+    margin-top: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #00000012;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 15px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+}
+
+button {
+    background: #253b80;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #172958;
+}
+
+.delete-btn {
+    background: #d93636;
+    padding: 7px 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #edf0fa;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #666;
+}
+
+@media(max-width: 600px) {
+    table {
+        font-size: 12px;
+    }
+    th, td {
+        padding: 7px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Student Expense Tracker</h1>
+    <p>Manage your daily expenses smartly</p>
+</header>
+
+<div class="container">
+
+    <div class="cards">
+        <div class="card">
+            <h3>Monthly Budget</h3>
+            <p id="budgetDisplay">₹5000</p>
+        </div>
+
+        <div class="card">
+            <h3>Total Expenses</h3>
+            <p id="expenseDisplay">₹0</p>
+        </div>
+
+        <div class="card">
+            <h3>Remaining Balance</h3>
+            <p id="balanceDisplay">₹5000</p>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <h2>Set Your Monthly Budget</h2>
+        <input type="number" id="budgetInput" placeholder="Enter budget">
+        <button onclick="setBudget()">Update Budget</button>
+    </div>
+
+    <div class="form-box">
+        <h2>Add New Expense</h2>
+
+        <label>Expense Name</label>
+        <input type="text" id="expenseName" placeholder="Example: Food">
+
+        <label>Amount (₹)</label>
+        <input type="number" id="expenseAmount" placeholder="Enter amount">
+
+        <label>Category</label>
+        <select id="expenseCategory">
+            <option value="Food">Food</option>
+            <option value="Travel">Travel</option>
+            <option value="Education">Education</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Date</label>
+        <input type="date" id="expenseDate">
+
+        <button onclick="addExpense()">Add Expense</button>
+    </div>
+
+    <div class="history">
+        <h2>Expense History</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="expenseTable"></tbody>
+        </table>
+
+        <p id="emptyMessage">No expenses added yet.</p>
+    </div>
+
+</div>
+
+<footer>
+    Student Expense Tracker | Mini Project using HTML, CSS and JavaScript
+</footer>
+
+<script>
+let budget = Number(localStorage.getItem("studentBudget")) || 5000;
+
+let expenses = JSON.parse(
+    localStorage.getItem("studentExpenses") || "[]"
+);
+
+function saveData() {
+    localStorage.setItem("studentBudget", budget);
+    localStorage.setItem(
+        "studentExpenses",
+        JSON.stringify(expenses)
+    );
+}
+
+function setBudget() {
+    let value = Number(document.getElementById("budgetInput").value);
+
+    if (!Number.isFinite(value) || value <= 0) {
+        alert("Please enter a valid budget.");
+        return;
+    }
+
+    budget = value;
+    saveData();
+    updateDashboard();
+
+    document.getElementById("budgetInput").value = "";
+}
+
+function addExpense() {
+    let name = document.getElementById("expenseName").value.trim();
+    let amount = Number(document.getElementById("expenseAmount").value);
+    let category = document.getElementById("expenseCategory").value;
+    let date = document.getElementById("expenseDate").value;
+
+    if (!name || !Number.isFinite(amount) || amount <= 0 || !date) {
+        alert("Please enter valid details in all fields.");
+        return;
+    }
+
+    expenses.push({
+        id: Date.now(),
+        name: name,
+        amount: amount,
+        category: category,
+        date: date
+    });
+
+    saveData();
+    updateDashboard();
+
+    document.getElementById("expenseName").value = "";
+    document.getElementById("expenseAmount").value = "";
+    document.getElementById("expenseDate").value = "";
+}
+
+function deleteExpense(id) {
+    expenses = expenses.filter(item => item.id !== id);
+    saveData();
+    updateDashboard();
+}
+
+function updateDashboard() {
+    let total = expenses.reduce(
+        (sum, item) => sum + item.amount, 0
+    );
+
+    document.getElementById("budgetDisplay").textContent =
+        "₹" + budget.toFixed(2);
+
+    document.getElementById("expenseDisplay").textContent =
+        "₹" + total.toFixed(2);
+
+    document.getElementById("balanceDisplay").textContent =
+        "₹" + (budget - total).toFixed(2);
+
+    let table = document.getElementById("expenseTable");
+    let emptyMessage = document.getElementById("emptyMessage");
+
+    table.innerHTML = "";
+
+    emptyMessage.style.display =
+        expenses.length === 0 ? "block" : "none";
+
+    expenses.forEach(item => {
+        let row = table.insertRow();
+
+        row.insertCell(0).textContent = item.name;
+        row.insertCell(1).textContent = item.category;
+        row.insertCell(2).textContent = "₹" + item.amount.toFixed(2);
+        row.insertCell(3).textContent = item.date;
+
+        let actionCell = row.insertCell(4);
+        let button = document.createElement("button");
+
+        button.textContent = "Delete";
+        button.className = "delete-btn";
+        button.onclick = () => deleteExpense(item.id);
+
+        actionCell.appendChild(button);
+    });
+}
+
+updateDashboard();
+</script>
+
+</body>
+</html>
